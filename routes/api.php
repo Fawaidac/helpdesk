@@ -16,3 +16,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/komplain', [DataKomplainController::class, 'index']);
+Route::get('/komplain/dashboard', [DataKomplainController::class, 'dashboard']);

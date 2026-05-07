@@ -21,12 +21,41 @@ class DataKomplainController extends Controller
         try {
             $search = $request->query('search');
             $kategori = $request->query('kategori');
+            $isDone = $request->query('is_done');
+            if ($isDone !== null) {
+                $isDone = filter_var($isDone, FILTER_VALIDATE_BOOLEAN);
+            }
 
-            $data = $this->service->getAll($search, $kategori);
-
+            $data = $this->service->getAll(
+                $search,
+                $kategori,
+                $isDone,
+            );
+            
             return ApiResponse::success($data, 'get data komplain success');
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 500);
+        }
+    }
+
+    public function dashboard()
+    {
+        try {
+
+            $data = $this->service
+                ->getDashboardCount();
+
+            return ApiResponse::success(
+                $data,
+                'get data dashboard success'
+            );
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::error(
+                $e->getMessage(),
+                500
+            );
         }
     }
 }
