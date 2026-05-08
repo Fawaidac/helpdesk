@@ -10,6 +10,38 @@ class DataKomplain extends Model
 
     protected $guarded = [];
 
+    protected $appends = ['status'];
+
+    public function getStatusAttribute()
+    {
+        $isDone =
+            $this->nomor_act !== null;
+            //  &&
+            // $this->tanggal_act !== null &&
+            // $this->tanggal_act !== '0000-00-00 00:00:00';
+
+        return $isDone ? 'DONE' : 'PENDING';
+    }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+
+        if (
+            empty($array['pde']) &&
+            !empty($this->nomor_act)
+        ) {
+            $array['pde'] = [
+                'id' => null,
+                'nama' => 'Petugas',
+                'alamat' => null,
+                'telp' => $this->nomor_act,
+            ];
+        }
+
+        return $array;
+    }
+
     public function pde()
     {
         return $this->belongsTo(

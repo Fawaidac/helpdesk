@@ -14,7 +14,6 @@ class DataKomplainService
     ) {
         $query = DataKomplain::with('pde');
 
-        /// SEARCH
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%$search%")
@@ -71,24 +70,12 @@ class DataKomplainService
         if ($isDone !== null) {
 
             if ($isDone) {
-                $query->whereNotNull('nomor_act')
-                    ->whereNotNull('tanggal_act')
-                    ->where(
-                        'tanggal_act',
-                        '!=',
-                        '0000-00-00 00:00:00'
-                    );
+                $query->whereNotNull('nomor_act');
             }
 
             else {
                 $query->where(function ($q) {
-                    $q->whereNull('nomor_act')
-                        ->orWhereNull('tanggal_act')
-                        ->orWhere(
-                            'tanggal_act',
-                            '=',
-                            '0000-00-00 00:00:00'
-                        );
+                    $q->whereNull('nomor_act');
                 });
             }
         }
