@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DataKomplain;
+use Carbon\Carbon;
 
 class DataKomplainService
 {
@@ -11,6 +12,7 @@ class DataKomplainService
     $search = null,
     $kategori = null,
     $isDone = null,
+    $recent = null,
     ) {
         $query = DataKomplain::with('pde');
 
@@ -71,12 +73,13 @@ class DataKomplainService
 
             if ($isDone) {
                 $query->whereNotNull('nomor_act');
-            }
+            } else {
+                $query->whereNull('nomor_act');
 
-            else {
-                $query->where(function ($q) {
-                    $q->whereNull('nomor_act');
-                });
+                // 🔥 kondisi tambahan (opsional)
+                if ($recent) {
+                    $query->where('tanggal', '>=', Carbon::now()->subHour());
+                }
             }
         }
 

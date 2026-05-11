@@ -14,6 +14,7 @@ class DataKomplainController extends Controller
     public function __construct()
     {
         $this->service = new DataKomplainService();
+        $this->middleware('api.auth');
     }
 
     public function index(Request $request)
@@ -22,14 +23,19 @@ class DataKomplainController extends Controller
             $search = $request->query('search');
             $kategori = $request->query('kategori');
             $isDone = $request->query('is_done');
+            $recent = $request->query('recent');
             if ($isDone !== null) {
                 $isDone = filter_var($isDone, FILTER_VALIDATE_BOOLEAN);
+            }
+            if ($recent !== null) {
+            $recent = filter_var($recent, FILTER_VALIDATE_BOOLEAN);
             }
 
             $data = $this->service->getAll(
                 $search,
                 $kategori,
                 $isDone,
+                $recent
             );
             
             return ApiResponse::success($data, 'get data komplain success');
