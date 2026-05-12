@@ -20,4 +20,5 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/me', [AuthController::class, 'me']);
 Route::get('/komplain', [DataKomplainController::class, 'index']);
 Route::get('/komplain/dashboard', [DataKomplainController::class, 'dashboard']);
+Route::get('/pde', [DataKomplainController::class, 'getDataPde']);
 

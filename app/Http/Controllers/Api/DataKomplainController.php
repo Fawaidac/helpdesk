@@ -24,6 +24,8 @@ class DataKomplainController extends Controller
             $kategori = $request->query('kategori');
             $isDone = $request->query('is_done');
             $recent = $request->query('recent');
+            $nomorAct = $request->query('nomor_act');
+
             if ($isDone !== null) {
                 $isDone = filter_var($isDone, FILTER_VALIDATE_BOOLEAN);
             }
@@ -31,11 +33,13 @@ class DataKomplainController extends Controller
             $recent = filter_var($recent, FILTER_VALIDATE_BOOLEAN);
             }
 
+
             $data = $this->service->getAll(
                 $search,
                 $kategori,
                 $isDone,
-                $recent
+                $recent,
+                $nomorAct
             );
             
             return ApiResponse::success($data, 'get data komplain success');
@@ -62,6 +66,17 @@ class DataKomplainController extends Controller
                 $e->getMessage(),
                 500
             );
+        }
+    }
+
+    public function getDataPde()
+    {
+        try {
+            $data = $this->service->getDataTeamPde();
+
+            return ApiResponse::success($data, 'get data team PDE success');
+        } catch (\Exception $e) {
+            return ApiResponse::error($e->getMessage(), 500);
         }
     }
 }

@@ -16,18 +16,18 @@ class AuthService
             throw new \Exception('Username atau password salah');
         }
 
-        ApiToken::where('user_id', $user->id)->delete();
+        // ApiToken::where('user_id', $user->id)->delete();
 
         $token = base64_encode(Str::random(100));
 
         ApiToken::create([
             'user_id' => $user->id,
             'token' => hash('sha256', $token),
-            'expired_at' => now()->addDays(7)
+            'expired_at' => now()->addDays(3)
         ]);
 
         return [
-            'user' => $user,
+            // 'user' => $user,
             'token' => $token
         ];
     }

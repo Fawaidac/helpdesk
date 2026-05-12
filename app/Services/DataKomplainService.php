@@ -9,12 +9,15 @@ class DataKomplainService
 {
 
     public function getAll(
-    $search = null,
-    $kategori = null,
-    $isDone = null,
-    $recent = null,
+        $search = null,
+        $kategori = null,
+        $isDone = null,
+        $recent = null,
+        $nomorAct = null
     ) {
-        $query = DataKomplain::with('pde');
+        $query = DataKomplain::with('pde')
+            ->whereMonth('tanggal', Carbon::now()->month)
+            ->whereYear('tanggal', Carbon::now()->year);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -26,7 +29,6 @@ class DataKomplainService
             });
         }
 
-        /// FILTER KATEGORI
         if ($kategori === 'simrs') {
             $query->where(function ($q) {
                 $keywords = [
@@ -39,11 +41,7 @@ class DataKomplainService
                 ];
 
                 foreach ($keywords as $word) {
-                    $q->orWhere(
-                        'permasalahan',
-                        'like',
-                        "%$word%"
-                    );
+                    $q->orWhere('permasalahan', 'like', "%$word%");
                 }
             });
         }
@@ -60,26 +58,29 @@ class DataKomplainService
                 ];
 
                 foreach ($keywords as $word) {
-                    $q->orWhere(
-                        'permasalahan',
-                        'like',
-                        "%$word%"
-                    );
+                    $q->orWhere('permasalahan', 'like', "%$word%");
                 }
             });
         }
 
         if ($isDone !== null) {
-
             if ($isDone) {
-                $query->whereNotNull('nomor_act');
+                $query->whereNotNull('nomor_act'); 
             } else {
-                $query->whereNull('nomor_act');
+                $query->whereNull('nomor_act'); 
 
-                // 🔥 kondisi tambahan (opsional)
                 if ($recent) {
                     $query->where('tanggal', '>=', Carbon::now()->subHour());
                 }
+            }
+        }
+
+        if ($nomorAct !== null) {
+            if ($nomorAct === 'null') {
+                // ambil yang belum ditangani
+                $query->whereNull('nomor_act');
+            } else {
+                $query->where('nomor_act', $nomorAct);
             }
         }
 
@@ -108,78 +109,75 @@ class DataKomplainService
             'cpu'
         ];
 
-        /// QUERY STATUS DONE
+        $baseQuery = DataKomplain::whereMonth('tanggal', Carbon::now()->month)
+            ->whereYear('tanggal', Carbon::now()->year);
+
         $doneQuery = function ($query) {
-            $query->whereNotNull('nomor_act')
-                ->whereNotNull('tanggal_act')
-                ->where(
-                    'tanggal_act',
-                    '!=',
-                    '0000-00-00 00:00:00'
-                );
+            $query->whereNotNull('nomor_act');
         };
 
-        /// QUERY STATUS OPEN
         $openQuery = function ($query) {
             $query->where(function ($q) {
-                $q->whereNull('nomor_act')
-                    ->orWhereNull('tanggal_act')
-                    ->orWhere(
-                        'tanggal_act',
-                        '0000-00-00 00:00:00'
-                    );
+                $q->whereNull('nomor_act');
             });
         };
 
-        /// TOTAL
-        $ticketOpen = DataKomplain::where($openQuery)->count();
+        $ticketOpen = (clone $baseQuery)->where($openQuery)->count();
 
-        $ticketDone = DataKomplain::where($doneQuery)->count();
+        $ticketDone = (clone $baseQuery)->where($doneQuery)->count();
 
-        /// SIMRS
-        $simrsMasuk = DataKomplain::where(function ($q) use ($simrsKeywords) {
+        $simrsMasuk = (clone $baseQuery)->where(function ($q) use ($simrsKeywords) {
             foreach ($simrsKeywords as $word) {
-                $q->orWhere(
-                    'permasalahan',
-                    'like',
-                    "%$word%"
-                );
+                $q->orWhere('permasalahan', 'like', "%$word%");
             }
         })->count();
 
-        $simrsDone = DataKomplain::where($doneQuery)
+        $simrsDone = (clone $baseQuery)
+            ->where($doneQuery)
             ->where(function ($q) use ($simrsKeywords) {
                 foreach ($simrsKeywords as $word) {
-                    $q->orWhere(
-                        'permasalahan',
-                        'like',
-                        "%$word%"
-                    );
+                    $q->orWhere('permasalahan', 'like', "%$word%");
                 }
             })->count();
 
-        /// MAINTENANCE
-        $maintenanceMasuk = DataKomplain::where(function ($q) use ($maintenanceKeywords) {
+        $maintenanceMasuk = (clone $baseQuery)->where(function ($q) use ($maintenanceKeywords) {
             foreach ($maintenanceKeywords as $word) {
-                $q->orWhere(
-                    'permasalahan',
-                    'like',
-                    "%$word%"
-                );
+                $q->orWhere('permasalahan', 'like', "%$word%");
             }
         })->count();
 
-        $maintenanceDone = DataKomplain::where($doneQuery)
+        $maintenanceDone = (clone $baseQuery)
+            ->where($doneQuery)
             ->where(function ($q) use ($maintenanceKeywords) {
                 foreach ($maintenanceKeywords as $word) {
-                    $q->orWhere(
-                        'permasalahan',
-                        'like',
-                        "%$word%"
-                    );
+                    $q->orWhere('permasalahan', 'like', "%$word%");
                 }
             })->count();
 
+        $pdeTeamCounter = 1;
+
+        $pdePerformance = (clone $baseQuery)
+            ->selectRaw('nomor_act, COUNT(*) as total')
+            ->whereNotNull('nomor_act')
+            ->groupBy('nomor_act')
+            ->with('pde')
+            ->orderByDesc('total')
+            ->get()
+            ->map(function ($item) use (&$pdeTeamCounter) {
+
+                $isPdeExist = $item->pde !== null;
+
+                return [
+                    'id' => $item->pde->id ?? null,
+                    'nama' => $isPdeExist
+                        ? $item->pde->nama
+                        : 'PDE Team ' . $pdeTeamCounter++,
+                    'alamat' => $item->pde->alamat ?? null,
+                    'telp' => $item->nomor_act,
+                    'total' => $item->total,
+                ];
+            });
+            
         return [
             'ticket_open' => $ticketOpen,
             'ticket_done' => $ticketDone,
@@ -189,6 +187,34 @@ class DataKomplainService
 
             'maintenance_masuk' => $maintenanceMasuk,
             'maintenance_done' => $maintenanceDone,
+            'pde_performance' => $pdePerformance,
         ];
+    }
+
+    public function getDataTeamPde()
+    {
+        $pdeTeamCounter = 1;
+
+        $data = DataKomplain::with('pde')
+            ->whereNotNull('nomor_act')
+            ->select('nomor_act')
+            ->distinct()
+            ->orderBy('nomor_act')
+            ->get()
+            ->map(function ($item) use (&$pdeTeamCounter) {
+
+                $isPdeExist = $item->pde !== null;
+
+                return [
+                    'id' => $item->pde->id ?? null,
+                    'nama' => $isPdeExist
+                        ? $item->pde->nama
+                        : 'PDE Team ' . $pdeTeamCounter++,
+                    'alamat' => $item->pde->alamat ?? null,
+                    'telp' => $item->nomor_act,
+                ];
+            });
+
+        return $data->values();
     }
 }

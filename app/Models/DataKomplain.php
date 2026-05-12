@@ -16,9 +16,6 @@ class DataKomplain extends Model
     {
         $isDone =
             $this->nomor_act !== null;
-            //  &&
-            // $this->tanggal_act !== null &&
-            // $this->tanggal_act !== '0000-00-00 00:00:00';
 
         return $isDone ? 'DONE' : 'PENDING';
     }
@@ -33,7 +30,7 @@ class DataKomplain extends Model
         ) {
             $array['pde'] = [
                 'id' => null,
-                'nama' => 'Petugas',
+                'nama' => 'PDE Team',
                 'alamat' => null,
                 'telp' => $this->nomor_act,
             ];
