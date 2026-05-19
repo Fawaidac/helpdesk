@@ -63,24 +63,11 @@ return [
             ]) : [],
         ],
 
-        'mysql_secondary' => [
-            'driver' => 'mysql',
-            'url' => env('DATABASE_URL'),
-            'host' => env('DB_SECONDARY_HOST', '127.0.0.1'),
-            'port' => env('DB_SECONDARY_PORT', '3306'),
-            'database' => env('DB_SECONDARY_DATABASE', 'forge'),
-            'username' => env('DB_SECONDARY_USERNAME', 'forge'),
-            'password' => env('DB_SECONDARY_PASSWORD', ''),
-            'unix_socket' => env('DB_SECONDARY_SOCKET', ''),
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
+        'sqlite_secondary' => [
+            'driver' => 'sqlite',
+            'database' => database_path('database_secondary.sqlite'),
             'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            'foreign_key_constraints' => true,
         ],
 
         'pgsql' => [

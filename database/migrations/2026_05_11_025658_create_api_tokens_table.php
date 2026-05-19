@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::connection('mysql_secondary')->create('api_tokens', function (Blueprint $table) {
+        Schema::connection('sqlite_secondary')->create('api_tokens', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
             $table->string('token')->unique();

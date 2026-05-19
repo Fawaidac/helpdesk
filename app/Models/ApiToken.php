@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ApiToken extends Model
 {
-    protected $connection = 'mysql_secondary';
+    protected $connection = 'sqlite_secondary';
 
     protected $fillable = [
         'user_id',
