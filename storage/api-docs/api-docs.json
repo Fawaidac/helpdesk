@@ -1,0 +1,1031 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API Documentation",
+        "description": "Dokumentasi API Terintegrasi menggunakan L5-Swagger",
+        "contact": {
+            "email": "developer@example.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "API Server Environment"
+        }
+    ],
+    "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User Login",
+                "operationId": "authLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "superadmin"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login berhasil"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/me": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get Current User Profile",
+                "description": "Mengambil data profil user yang sedang login menggunakan token.",
+                "operationId": "getAuthUser",
+                "responses": {
+                    "200": {
+                        "description": "Get user success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Get user success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Achmad Fawaid"
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "admin@example.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "superadmin"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/check-pin": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Validasi PIN User",
+                "description": "Mencocokkan input PIN 6 digit (Khusus Role Superadmin).",
+                "operationId": "authCheckPin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "pin"
+                                ],
+                                "properties": {
+                                    "pin": {
+                                        "type": "string",
+                                        "maxLength": 6,
+                                        "minLength": 6,
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "PIN Valid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "PIN valid"
+                                        },
+                                        "data": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "PIN Salah / Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/komplain": {
+            "get": {
+                "tags": [
+                    "Data Komplain"
+                ],
+                "summary": "Get List Data Komplain (Paginated)",
+                "description": "Mengambil semua data komplain bulan berjalan dengan filter pencarian, kategori keywords, status pengerjaan, dan tim PDE.",
+                "operationId": "getDataKomplain",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Cari berdasarkan nama, pelapor, ruangan, permasalahan, atau nomor WA",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "printer"
+                        }
+                    },
+                    {
+                        "name": "kategori",
+                        "in": "query",
+                        "description": "Filter kategori berdasarkan kecocokan keyword masalah (simrs / maintanance)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "simrs",
+                                "maintanance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_done",
+                        "in": "query",
+                        "description": "Filter status pengerjaan (true: memiliki nomor_act, false: nomor_act kosong)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    },
+                    {
+                        "name": "recent",
+                        "in": "query",
+                        "description": "Jika is_done=false dan recent=true, tampilkan komplain 1 jam terakhir saja",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    },
+                    {
+                        "name": "nomor_act",
+                        "in": "query",
+                        "description": "Filter berdasarkan nomor_act penanganan tertentu, atau string 'null' untuk yang belum ditangani",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "null"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Nomor halaman pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Get data komplain success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "get data komplain success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            },
+                                                            "nama": {
+                                                                "type": "string",
+                                                                "example": "Roni"
+                                                            },
+                                                            "nama_pelapor": {
+                                                                "type": "string",
+                                                                "example": "Siti"
+                                                            },
+                                                            "ruangan": {
+                                                                "type": "string",
+                                                                "example": "Poli Jantung"
+                                                            },
+                                                            "permasalahan": {
+                                                                "type": "string",
+                                                                "example": "Printer macet tinta habis"
+                                                            },
+                                                            "nomor_wa": {
+                                                                "type": "string",
+                                                                "example": "08123456789"
+                                                            },
+                                                            "nomor_act": {
+                                                                "type": "string",
+                                                                "example": "085544332211",
+                                                                "nullable": true
+                                                            },
+                                                            "tanggal": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2026-06-10"
+                                                            },
+                                                            "pde": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 2
+                                                                    },
+                                                                    "nama": {
+                                                                        "type": "string",
+                                                                        "example": "Ahmad PDE"
+                                                                    },
+                                                                    "alamat": {
+                                                                        "type": "string",
+                                                                        "example": "Gedung IT Lantai 2"
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 25
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/komplain/dashboard": {
+            "get": {
+                "tags": [
+                    "Data Komplain"
+                ],
+                "summary": "Get Counter Statisitik Dashboard",
+                "description": "Mengambil rangkuman jumlah tiket open, done, pembagian kategori, beserta performa per tim PDE bulan berjalan.",
+                "operationId": "getKomplainDashboard",
+                "responses": {
+                    "200": {
+                        "description": "get data dashboard success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "get data dashboard success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "ticket_open": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "ticket_done": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "simrs_masuk": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "simrs_done": {
+                                                    "type": "integer",
+                                                    "example": 18
+                                                },
+                                                "maintenance_masuk": {
+                                                    "type": "integer",
+                                                    "example": 27
+                                                },
+                                                "maintenance_done": {
+                                                    "type": "integer",
+                                                    "example": 24
+                                                },
+                                                "pde_performance": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1,
+                                                                "nullable": true
+                                                            },
+                                                            "nama": {
+                                                                "type": "string",
+                                                                "example": "Ahmad PDE"
+                                                            },
+                                                            "alamat": {
+                                                                "type": "string",
+                                                                "example": "Jember",
+                                                                "nullable": true
+                                                            },
+                                                            "telp": {
+                                                                "type": "string",
+                                                                "example": "085544332211"
+                                                            },
+                                                            "total": {
+                                                                "type": "integer",
+                                                                "example": 15
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pde": {
+            "get": {
+                "tags": [
+                    "Data Komplain"
+                ],
+                "summary": "Get Distinct Team PDE Data",
+                "description": "Mengambil daftar unik tim PDE yang sudah pernah menangani komplain (berdasarkan unique nomor_act).",
+                "operationId": "getTeamPde",
+                "responses": {
+                    "200": {
+                        "description": "get data team PDE success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "get data team PDE success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1,
+                                                        "nullable": true
+                                                    },
+                                                    "nama": {
+                                                        "type": "string",
+                                                        "example": "PDE Team 1"
+                                                    },
+                                                    "alamat": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "telp": {
+                                                        "type": "string",
+                                                        "example": "085544332211"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/revenue": {
+            "get": {
+                "tags": [
+                    "Revenue / Pendapatan"
+                ],
+                "summary": "Get Laporan Realisasi Dashboard",
+                "description": "Mengambil rangkuman hitungan data realisasi pendapatan horizontal dan vertikal sesuai tabel format Excel berdasarkan tahun.",
+                "operationId": "getRevenueDashboard",
+                "parameters": [
+                    {
+                        "name": "tahun",
+                        "in": "query",
+                        "description": "Tahun laporan pendapatan yang ingin dicari",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1900
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Get data berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Get data berhasil"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "tahun": {
+                                                    "type": "integer",
+                                                    "example": 1900
+                                                },
+                                                "target_tahunan": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "UMUM": 2803200000,
+                                                        "BPJS KESEHATAN": 284856000000
+                                                    }
+                                                },
+                                                "total_target_tahunan": {
+                                                    "type": "number",
+                                                    "example": 330000000000
+                                                },
+                                                "target_bulanan": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "UMUM": 233600000,
+                                                        "BPJS KESEHATAN": 23738000000
+                                                    }
+                                                },
+                                                "total_target_bulanan": {
+                                                    "type": "number",
+                                                    "example": 27500000000
+                                                },
+                                                "realisasi": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "bulan": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "bulan_name": {
+                                                                "type": "string",
+                                                                "example": "Januari"
+                                                            },
+                                                            "categories": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "category": {
+                                                                            "type": "string",
+                                                                            "example": "UMUM"
+                                                                        },
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 2000000000
+                                                                        },
+                                                                        "percentage": {
+                                                                            "type": "string",
+                                                                            "example": "856.16"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "total_bulan": {
+                                                                "type": "number",
+                                                                "example": 14800000000
+                                                            },
+                                                            "total_percentage": {
+                                                                "type": "string",
+                                                                "example": "57.09"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "total_per_kategori": {
+                                                            "type": "object",
+                                                            "example": {
+                                                                "UMUM": 24000000000
+                                                            }
+                                                        },
+                                                        "persentase_tahun": {
+                                                            "type": "object",
+                                                            "example": {
+                                                                "UMUM": "856.16"
+                                                            }
+                                                        },
+                                                        "grand_total_realisasi": {
+                                                            "type": "number",
+                                                            "example": 114738116031
+                                                        },
+                                                        "grand_persentase_tahun": {
+                                                            "type": "string",
+                                                            "example": "34.77"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request / Validasi Gagal"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Revenue / Pendapatan"
+                ],
+                "summary": "Store / Update Target & Realisasi Bulanan",
+                "description": "Menyimpan atau memperbarui data master target tahunan, bulanan, beserta nominal cicilan realisasi pendapatan per kategori code (Khusus Superadmin).",
+                "operationId": "storeOrUpdateRevenue",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tahun",
+                                    "targets"
+                                ],
+                                "properties": {
+                                    "tahun": {
+                                        "type": "integer",
+                                        "example": 1900
+                                    },
+                                    "targets": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "category_code",
+                                                "target_tahunan",
+                                                "target_bulanan"
+                                            ],
+                                            "properties": {
+                                                "category_code": {
+                                                    "type": "string",
+                                                    "example": "umum"
+                                                },
+                                                "target_tahunan": {
+                                                    "type": "number",
+                                                    "example": 2803200000
+                                                },
+                                                "target_bulanan": {
+                                                    "type": "number",
+                                                    "example": 233600000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "realisasi": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "bulan",
+                                                "categories"
+                                            ],
+                                            "properties": {
+                                                "bulan": {
+                                                    "type": "integer",
+                                                    "maximum": 12,
+                                                    "minimum": 1,
+                                                    "example": 1
+                                                },
+                                                "categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "required": [
+                                                            "category_code",
+                                                            "amount"
+                                                        ],
+                                                        "properties": {
+                                                            "category_code": {
+                                                                "type": "string",
+                                                                "example": "umum"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number",
+                                                                "example": 2000000000
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data target dan realisasi berhasil disimpan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data target dan realisasi berhasil disimpan"
+                                        },
+                                        "data": {
+                                            "type": "null",
+                                            "example": null
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error (Unprocessable Entity)"
+                    },
+                    "401": {
+                        "description": "Unauthenticated / Token missing"
+                    },
+                    "403": {
+                        "description": "Forbidden (Bukan Superadmin)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/revenue/years": {
+            "get": {
+                "tags": [
+                    "Revenue / Pendapatan"
+                ],
+                "summary": "Get List Tahun Terdaftar",
+                "description": "Mengambil semua data tahun unik yang sudah terdaftar di database untuk kebutuhan dropdown opsi form filter (Khusus Superadmin).",
+                "operationId": "getRevenueYears",
+                "responses": {
+                    "200": {
+                        "description": "Get list tahun berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Get list tahun berhasil"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer",
+                                                "example": 1900
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/revenue/detail": {
+            "get": {
+                "tags": [
+                    "Revenue / Pendapatan"
+                ],
+                "summary": "Get Raw Data Form Input by Year",
+                "description": "Mengambil skema data target dan nominal realisasi asli (mentah) per tahun untuk kebutuhan binding default values ke dalam Form Edit (Khusus Superadmin).",
+                "operationId": "getRevenueDetailByYear",
+                "parameters": [
+                    {
+                        "name": "tahun",
+                        "in": "query",
+                        "description": "Tahun data yang mau di-load ke form",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1900
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Get detail data tahun berhasil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Get detail data tahun berhasil"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "tahun": {
+                                                    "type": "integer",
+                                                    "example": 1900
+                                                },
+                                                "targets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "category_code": {
+                                                                "type": "string",
+                                                                "example": "umum"
+                                                            },
+                                                            "category_name": {
+                                                                "type": "string",
+                                                                "example": "UMUM"
+                                                            },
+                                                            "target_tahunan": {
+                                                                "type": "number",
+                                                                "example": 2803200000
+                                                            },
+                                                            "target_bulanan": {
+                                                                "type": "number",
+                                                                "example": 233600000
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "realisasi": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "bulan": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "bulan_name": {
+                                                                "type": "string",
+                                                                "example": "Januari"
+                                                            },
+                                                            "categories": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "category_code": {
+                                                                            "type": "string",
+                                                                            "example": "umum"
+                                                                        },
+                                                                        "category_name": {
+                                                                            "type": "string",
+                                                                            "example": "UMUM"
+                                                                        },
+                                                                        "amount": {
+                                                                            "type": "number",
+                                                                            "example": 2000000000
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validasi tahun salah"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Masukkan token Anda tanpa kata 'Bearer '",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Data Komplain",
+            "description": "Data Komplain"
+        },
+        {
+            "name": "Revenue / Pendapatan",
+            "description": "Revenue / Pendapatan"
+        }
+    ]
+}

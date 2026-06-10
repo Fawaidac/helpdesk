@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class AuthService
 {
-    public function login($username, $password)
+    public function login(string $username, string $password): array
     {
         $user = User::where('username', $username)->first();
 
@@ -32,7 +32,7 @@ class AuthService
         ];
     }
 
-    public function getUser($userId)
+    public function getUser(int $userId): User
     {
         $user = User::find($userId);
 
@@ -41,5 +41,24 @@ class AuthService
         }
 
         return $user;
+    }
+
+    public function checkPin(int $userId, string $pin): bool
+    {
+        $user = User::find($userId);
+
+        if (!$user) {
+            throw new \Exception('User tidak ditemukan');
+        }
+
+        if (!$user->pin) {
+            throw new \Exception('User tidak memiliki PIN');
+        }
+
+        if (!Hash::check($pin, $user->pin)) {
+            throw new \Exception('PIN salah');
+        }
+
+        return true;
     }
 }

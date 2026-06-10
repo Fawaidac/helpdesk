@@ -64,8 +64,8 @@ return [
         ],
 
         'sqlite_secondary' => [
-            'driver' => 'sqlite',
-            'database' => database_path('database_secondary.sqlite'),
+            'driver' => env('DB_SECONDARY_CONNECTION', 'sqlite'),
+            'database' => base_path(env('DB_SECONDARY_DATABASE', 'database/db_secondary.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => true,
         ],
