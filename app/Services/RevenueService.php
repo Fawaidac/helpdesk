@@ -202,7 +202,7 @@ class RevenueService
             }
         }
 
-        return true;
+        return $this->getByYear($tahun);
     }
 
     public function getYearList(): array
@@ -264,5 +264,23 @@ class RevenueService
             'targets' => $targetData,
             'realisasi' => $realisasiData
         ];
+    }
+    
+    public function deleteByYear(int $tahun): bool
+    {
+        return \Illuminate\Support\Facades\DB::connection('sqlite_secondary')->transaction(function () use ($tahun) {
+            
+            $revenueIds = Revenue::where('tahun', $tahun)->pluck('id')->toArray();
+
+            if (!empty($revenueIds)) {
+                RevenueDetail::whereIn('revenue_id', $revenueIds)->delete();
+                
+                Revenue::whereIn('id', $revenueIds)->delete();
+            }
+
+            Target::where('tahun', $tahun)->delete();
+
+            return true;
+        });
     }
 }

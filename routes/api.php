@@ -32,4 +32,5 @@ Route::prefix('revenue')->group(function () {
     Route::post('/', [RevenueController::class, 'store']);
     Route::get('/years', [RevenueController::class, 'years']);
     Route::get('/detail', [RevenueController::class, 'showByYear']);
+    Route::delete('/', [RevenueController::class, 'destroy']); 
 });

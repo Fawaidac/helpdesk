@@ -15,7 +15,7 @@ class RevenueController extends Controller
     {
         $this->service = new RevenueService();
         $this->middleware('api.auth');
-        $this->middleware('superadmin')->only(['store', 'years', 'showByYear']);
+        $this->middleware('superadmin')->only(['store', 'years', 'showByYear', 'destroy']);
     }
 
     /**
@@ -43,7 +43,7 @@ class RevenueController extends Controller
      * @OA\Property(property="tahun", type="integer", example=1900),
      * @OA\Property(property="target_tahunan", type="object", example={"UMUM": 2803200000, "BPJS KESEHATAN": 284856000000}),
      * @OA\Property(property="total_target_tahunan", type="number", example=330000000000),
-     * @OA\Property(property="target_bulanan", type="object", example={"UMUM": 233600000, "BPJS KESEHATAN": 23738000000}),
+     * @OA\Property(property="target_bulanan", type="object", example={"UMUM": 233600000, "BPJS KESEITASAN": 23738000000}),
      * @OA\Property(property="total_target_bulanan", type="number", example=27500000000),
      * @OA\Property(property="realisasi", type="array",
      * @OA\Items(type="object",
@@ -121,7 +121,49 @@ class RevenueController extends Controller
      * )
      * )
      * )
-     * )
+     * ),
+     * example={
+     * "tahun": 1900,
+     * "targets": {
+     * {"category_code": "umum", "target_tahunan": 2803200000, "target_bulanan": 233600000},
+     * {"category_code": "asuransi", "target_tahunan": 15261000000, "target_bulanan": 1271750000},
+     * {"category_code": "bpjs", "target_tahunan": 284856000000, "target_bulanan": 23738000000},
+     * {"category_code": "spm", "target_tahunan": 1254000000, "target_bulanan": 104500000},
+     * {"category_code": "lain", "target_tahunan": 6930000000, "target_bulanan": 577500000}
+     * },
+     * "realisasi": {
+     * {
+     * "bulan": 1,
+     * "categories": {
+     * {"category_code": "umum", "amount": 2000000000},
+     * {"category_code": "asuransi", "amount": 1500000000},
+     * {"category_code": "bpjs", "amount": 10000000000},
+     * {"category_code": "spm", "amount": 500000000},
+     * {"category_code": "lain", "amount": 800000000}
+     * }
+     * },
+     * {
+     * "bulan": 2,
+     * "categories": {
+     * {"category_code": "umum", "amount": 2100000000},
+     * {"category_code": "asuransi", "amount": 1450000000},
+     * {"category_code": "bpjs", "amount": 11000000000},
+     * {"category_code": "spm", "amount": 480000000},
+     * {"category_code": "lain", "amount": 820000000}
+     * }
+     * },
+     * {
+     * "bulan": 3,
+     * "categories": {
+     * {"category_code": "umum", "amount": 2050000000},
+     * {"category_code": "asuransi", "amount": 1600000000},
+     * {"category_code": "bpjs", "amount": 10500000000},
+     * {"category_code": "spm", "amount": 520000000},
+     * {"category_code": "lain", "amount": 790000000}
+     * }
+     * }
+     * }
+     * }
      * )
      * ),
      * @OA\Response(
@@ -155,9 +197,9 @@ class RevenueController extends Controller
                 'realisasi.*.categories.*.amount' => 'required|numeric',
             ]);
 
-            $this->service->storeOrUpdate($request->all());
+            $res = $this->service->storeOrUpdate($request->all());
 
-            return ApiResponse::success(null, 'Data target dan realisasi berhasil disimpan');
+            return ApiResponse::success($res, 'Data target dan realisasi berhasil disimpan');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponse::error($e->errors(), 422);
         } catch (\Exception $e) {
@@ -257,6 +299,51 @@ class RevenueController extends Controller
             $data = $this->service->getByYear($request->tahun);
 
             return ApiResponse::success($data, 'Get detail data tahun berhasil');
+        } catch (\Exception $e) {
+            return ApiResponse::error($e->getMessage(), 400);
+        }
+    }
+
+    /**
+     * @OA\Delete(
+     * path="/api/revenue",
+     * operationId="deleteRevenueByYear",
+     * tags={"Revenue / Pendapatan"},
+     * summary="Delete Seluruh Data Target & Realisasi Berdasarkan Tahun",
+     * description="Menghapus total semua record data target beserta realisasi 12 bulan yang berhubungan dengan tahun terlampir (Khusus Superadmin).",
+     * security={{"bearerAuth":{}}},
+     * @OA\Parameter(
+     * name="tahun",
+     * in="query",
+     * description="Tahun data yang ingin dihapus permanen",
+     * required=true,
+     * @OA\Schema(type="integer", example=1900)
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Data laporan tahunan berhasil dihapus",
+     * @OA\JsonContent(
+     * @OA\Property(property="success", type="boolean", example=true),
+     * @OA\Property(property="message", type="string", example="Data laporan tahunan berhasil dihapus"),
+     * @OA\Property(property="data", type="null", example=null)
+     * )
+     * ),
+     * @OA\Response(response=400, description="Gagal menghapus / Parameter salah"),
+     * @OA\Property(property="success", type="boolean", example=false),
+     * @OA\Response(response=401, description="Unauthenticated"),
+     * @OA\Response(response=403, description="Forbidden (Bukan Superadmin)")
+     * )
+     */
+    public function destroy(Request $request)
+    {
+        try {
+            $request->validate([
+                'tahun' => 'required|integer'
+            ]);
+
+            $this->service->deleteByYear($request->tahun);
+
+            return ApiResponse::success(null, 'Data laporan tahunan berhasil dihapus');
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), 400);
         }
